@@ -22,27 +22,34 @@ class build_message:
         except Exception as e:
             raise Exception(f"Error : {e}")
     
-    def replace_template_params(self, template, msg_template_params, response_message):
-
+    def replace_template_params(self, template, msg_template_params):
+        response={}
+        msg_template_params_lowercase = {key.lower(): value for key, value in msg_template_params.items()}
         placeholders = re.findall(r'\${(.*?)}', template)
-
         for placeholder in placeholders:
-            # Check for case-insensitive match in msg_template_params
-            matched_placeholder = next((key for key in msg_template_params if key.lower() == placeholder.lower()), None)
-            
-            if matched_placeholder:
-                # If the placeholder is found, replace it with the corresponding value
-                template = re.sub(f'\\${{{re.escape(placeholder)}}}', msg_template_params[matched_placeholder], template, flags=re.IGNORECASE)
-            else:
-                template = re.sub(f'\\${{{re.escape(placeholder)}}}', f'${{{placeholder}}}', template, flags=re.IGNORECASE)
-                error_code = ResponseCodes.INSUFFICIENT_PARAMETERS
-                response_message['error_code'] = error_code.value
-                response_message['error_message'] = error_code.name
-        
-        return template
+            matched_placeholder = msg_template_params_lowercase.get(placeholder.lower())
 
-    def create_message_block(self, template, msg_template_params, response_message):
-        template = self.replace_template_params(template, msg_template_params, response_message)
+            if matched_placeholder:
+                template = re.sub(f'\\${{{re.escape(placeholder)}}}', matched_placeholder, template, flags=re.IGNORECASE)
+            else:
+                error_code = ResponseCodes.INSUFFICIENT_PARAMETERS
+                response['error'] = error_code.name
+
+        response['template'] = template
+
+        return response
+    
+    def create_response_message(self, response, response_message):
+        if 'error' not in response:
+            error_code = ResponseCodes.SUCCESS
+            response_message['error_code'] = error_code.value
+        else:
+            error_name = response_message['error']
+            error_code_enum = getattr(ResponseCodes, error_name)
+            response_message['error_code'] = error_code_enum.value
+            response_message['error_message'] = error_code_enum.name
+
+        template = response['template']
 
         if isinstance(template, str):
             try:
@@ -51,13 +58,14 @@ class build_message:
                 raise Exception("Error: Template is not a valid JSON string")
         else:
             template_data = template
+        
+        response_message['formatted_message'] = template_data
 
-        if 'error_code' not in response_message:
-            error_code = ResponseCodes.SUCCESS
-            response_message['error_code'] = error_code.value
-            
-        response_message['formatted_msg'] = template_data
+        return response_message
 
+    def create_message_block(self, template, msg_template_params, response_message):
+        response = self.replace_template_params(template, msg_template_params)
+        response_message = self.create_response_message(response, response_message)
         return response_message
 
     def build_custom_slack_message(self, job_state_info, msg_template_params, msg_attachments):
@@ -65,7 +73,6 @@ class build_message:
         error_code = ""
         job_name = job_state_info['job_name']
         state = job_state_info['state']
-
         if self.does_template_exist(job_name, state) == False:
             error_code = ResponseCodes.INVALID_TEMPLATE_PATH
             response_message['error_code'] = error_code.value
