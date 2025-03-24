@@ -21,48 +21,28 @@ class build_message:
                 return template
         except Exception as e:
             raise Exception(f"Error : {e}")
-        
-    def create_dict_msg_template_params(self, msg_template_params):
-        template_input_array = list(msg_template_params.keys())
-        return template_input_array
-    
-    def extract_placeholders(self, element, template_params):
-        if isinstance(element, str):
-            placeholders = re.findall(r'{(.*?)}', element)
-            template_params.extend(placeholders)
-    
-    def create_template_params(self, template):
-        template_params = []
-        self.extract_placeholders(template, template_params)
-        return template_params
     
     def replace_template_params(self, template, msg_template_params, response_message):
 
-        placeholders = re.findall(r'{(.*?)}', template)
-        
+        placeholders = re.findall(r'\${(.*?)}', template)
+
         for placeholder in placeholders:
-            if placeholder in msg_template_params:
-                template = template.replace(f'{{{placeholder}}}', msg_template_params[placeholder])
+            # Check for case-insensitive match in msg_template_params
+            matched_placeholder = next((key for key in msg_template_params if key.lower() == placeholder.lower()), None)
+            
+            if matched_placeholder:
+                # If the placeholder is found, replace it with the corresponding value
+                template = re.sub(f'\\${{{re.escape(placeholder)}}}', msg_template_params[matched_placeholder], template, flags=re.IGNORECASE)
             else:
-                template = template.replace(f'{{{placeholder}}}', f'{{{placeholder}}}')  # Keep the placeholder if no value is found
-                error_code = ResponseCodes.PARAMETER_NOT_FOUND
+                template = re.sub(f'\\${{{re.escape(placeholder)}}}', f'${{{placeholder}}}', template, flags=re.IGNORECASE)
+                error_code = ResponseCodes.INSUFFICIENT_PARAMETERS
                 response_message['error_code'] = error_code.value
                 response_message['error_message'] = error_code.name
         
         return template
 
     def create_message_block(self, template, msg_template_params, response_message):
-        # iterate over msg_template_params and get each key and search for each key in template and do string replacement there
-        dict_msg_template_params = self.create_dict_msg_template_params(msg_template_params)
-        template_params = self.create_template_params(template)
-
-        if(len(dict_msg_template_params)<len(template_params)):
-            error_code = ResponseCodes.INSUFFICIENT_PARAMETERS
-            response_message['error_code'] = error_code.value
-            response_message['error_message'] = error_code.name
-            return response_message
-        else:
-            template = self.replace_template_params(template, msg_template_params, response_message)
+        template = self.replace_template_params(template, msg_template_params, response_message)
 
         if isinstance(template, str):
             try:
@@ -71,6 +51,10 @@ class build_message:
                 raise Exception("Error: Template is not a valid JSON string")
         else:
             template_data = template
+
+        if 'error_code' not in response_message:
+            error_code = ResponseCodes.SUCCESS
+            response_message['error_code'] = error_code.value
             
         response_message['formatted_msg'] = template_data
 

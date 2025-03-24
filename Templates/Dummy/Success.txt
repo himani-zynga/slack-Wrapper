@@ -7,7 +7,7 @@
 					"elements": [
 						{
 							"type": "text",
-							"text": "Basic bullet list with rich {branch_name} elements\n"
+							"text": "Basic bullet list with rich ${branch_name} elements\n"
 						}
 					]
 				},
@@ -21,7 +21,7 @@
 							"elements": [
 								{
 									"type": "text",
-									"text": "item 1: {job_name}"
+									"text": "item 1: ${job_name}"
 								},
 								{
 									"type": "emoji",
@@ -34,7 +34,7 @@
 							"elements": [
 								{
 									"type": "text",
-									"text": "item 2: {version}"
+									"text": "item 2: ${version}"
 								}
 							]
 						},
@@ -43,7 +43,7 @@
 							"elements": [
 								{
 									"type": "text",
-									"text": "item 3: {client_version}"
+									"text": "item 3: ${client_version}"
 								},
 								{
 									"type": "link",
