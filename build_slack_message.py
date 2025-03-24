@@ -1,7 +1,7 @@
 from exit_codes import ResponseCodes
 import os
 import json
-import fnmatch
+import re
 
 class build_message:
 
@@ -11,13 +11,7 @@ class build_message:
     
     def does_template_exist(self, job_name, state):
         template_path = self.create_path(job_name, state)
-        for file in os.listdir(os.path.dirname('Slack_Wrapper')):
-            print(file, "gjhg", template_path)
-            if fnmatch.fnmatch(file, template_path):
-                return True
-            
-        print("The template path does not exist.")
-        return False
+        return os.path.exists(template_path)
         
     def get_template(self, job_name, state):
         template_path = self.create_path(job_name, state)
@@ -26,45 +20,61 @@ class build_message:
                 template = file.read()
                 return template
         except Exception as e:
-            print(f"Failed to read the file at {template_path}")
+            raise Exception(f"Error : {e}")
+        
+    def create_dict_msg_template_params(self, msg_template_params):
+        template_input_array = list(msg_template_params.keys())
+        return template_input_array
+    
+    def extract_placeholders(self, element, template_params):
+        if isinstance(element, str):
+            placeholders = re.findall(r'{(.*?)}', element)
+            template_params.extend(placeholders)
+    
+    def create_template_params(self, template):
+        template_params = []
+        self.extract_placeholders(template, template_params)
+        return template_params
+    
+    def replace_template_params(self, template, msg_template_params, response_message):
 
-    def get_parameter(self, line):
-        start = "{"
-        end = "}"
-
-        start_index = line.find(start)
-        end_index = line.find(end, start_index + len(start))
-
-        if start_index != -1 and end_index != -1:
-            parameter = line[start_index + len(start):end_index]
-            return parameter
-        else:
-            print("Delimiters not found")
-
-#         start = text.find("[") + 1
-#         end = text.find("]")
-#         substring = text[start:end]
+        placeholders = re.findall(r'{(.*?)}', template)
+        
+        for placeholder in placeholders:
+            if placeholder in msg_template_params:
+                template = template.replace(f'{{{placeholder}}}', msg_template_params[placeholder])
+            else:
+                template = template.replace(f'{{{placeholder}}}', f'{{{placeholder}}}')  # Keep the placeholder if no value is found
+                error_code = ResponseCodes.PARAMETER_NOT_FOUND
+                response_message['error_code'] = error_code.value
+                response_message['error_message'] = error_code.name
+        
+        return template
 
     def create_message_block(self, template, msg_template_params, response_message):
         # iterate over msg_template_params and get each key and search for each key in template and do string replacement there
-        template_input_params = []
-        for i in range(len(template)):
-            if "text" in template[i] and "{" in template[i] and "}" in template[i]:
-                parameter = self.get_parameter(template[i])
-                template_input_params.append(parameter)
-        
+        dict_msg_template_params = self.create_dict_msg_template_params(msg_template_params)
+        template_params = self.create_template_params(template)
+
+        if(len(dict_msg_template_params)<len(template_params)):
+            error_code = ResponseCodes.INSUFFICIENT_PARAMETERS
+            response_message['error_code'] = error_code.value
+            response_message['error_message'] = error_code.name
+            return response_message
+        else:
+            template = self.replace_template_params(template, msg_template_params, response_message)
 
         if isinstance(template, str):
             try:
                 template_data = json.loads(template)
             except json.JSONDecodeError:
-                print("Error: Template is not a valid JSON string")
-                return
+                raise Exception("Error: Template is not a valid JSON string")
         else:
             template_data = template
+            
         response_message['formatted_msg'] = template_data
 
-        return template
+        return response_message
 
     def build_custom_slack_message(self, job_state_info, msg_template_params, msg_attachments):
         response_message = {}
@@ -75,10 +85,11 @@ class build_message:
         if self.does_template_exist(job_name, state) == False:
             error_code = ResponseCodes.INVALID_TEMPLATE_PATH
             response_message['error_code'] = error_code.value
+            response_message['error_message'] = error_code.name
         else:
             template = self.get_template(job_name, state)
-            message_block = self.create_message_block(template, msg_template_params, response_message)
-            print(msg_attachments)
+            response_message = self.create_message_block(template, msg_template_params, response_message)
+
         return response_message
     
     
