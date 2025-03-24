@@ -44,10 +44,8 @@ class build_message:
             error_code = ResponseCodes.SUCCESS
             response_message['error_code'] = error_code.value
         else:
-            error_name = response_message['error']
-            error_code_enum = getattr(ResponseCodes, error_name)
-            response_message['error_code'] = error_code_enum.value
-            response_message['error_message'] = error_code_enum.name
+            response_message['error_code'] = ResponseCodes.INSUFFICIENT_PARAMETERS.value
+            response_message['error_message'] = ResponseCodes.INSUFFICIENT_PARAMETERS.name
 
         template = response['template']
 
