@@ -3,7 +3,7 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 from exit_codes import ResponseCodes
-from response_constants import ResponseConstansts
+from response_constants import ResponseConstant
 
 
 class SlackMessageSender:
@@ -69,19 +69,19 @@ class SlackMessageSender:
             error_code = ResponseCodes.UNKNOWN_ERROR
 
         # Set error code and error message in response_message
-        response_message[ResponseConstansts.ERROR_CODE.value] = error_code.value
-        response_message[ResponseConstansts.ERROR_MESSAGE.value] = error_code.name
+        response_message[ResponseConstant.ERROR_CODE.value] = error_code.value
+        response_message[ResponseConstant.ERROR_MESSAGE.value] = error_code.name
         return error_code
 
     # Finalizes the success and error messages.
     def finalize_message(self, response_message, success_channels, failure_channels):
         if success_channels:
-            response_message[ResponseConstansts.SUCCESS_MESSAGE.value] = f"Successfully sent Slack message to channel(s) {success_channels[:-2]}."
+            response_message[ResponseConstant.SUCCESS_MESSAGE.value] = f"Successfully sent Slack message to channel(s) {success_channels[:-2]}."
         if failure_channels:
-            response_message[ResponseConstansts.FAILURE_MESSAGE.value] = f"Failed to send Slack message to channel(s) {failure_channels[:-2]}."
+            response_message[ResponseConstant.FAILURE_MESSAGE.value] = f"Failed to send Slack message to channel(s) {failure_channels[:-2]}."
 
-        if ResponseConstansts.ERROR_CODE.value not in response_message:
-            response_message[ResponseConstansts.ERROR_CODE.value] = ResponseCodes.SUCCESS.value
+        if ResponseConstant.ERROR_CODE.value not in response_message:
+            response_message[ResponseConstant.ERROR_CODE.value] = ResponseCodes.SUCCESS.value
 
         return response_message
 

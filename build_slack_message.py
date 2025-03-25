@@ -2,7 +2,7 @@ from exit_codes import ResponseCodes
 import os
 import json
 import re
-from response_constants import ResponseConstansts
+from response_constants import ResponseConstant
 
 class build_message:
 
@@ -45,23 +45,23 @@ class build_message:
             else:
                 # If no match is found, add an error message
                 error_code = ResponseCodes.INSUFFICIENT_PARAMETERS
-                response[ResponseConstansts.ERROR_MESSAGE.value] = error_code.name
+                response[ResponseConstant.ERROR_MESSAGE.value] = error_code.name
 
         # Store the modified template (with replaced placeholders) in the response
-        response[ResponseConstansts.FORMATTED_MESSAGE.value] = template
+        response[ResponseConstant.FORMATTED_MESSAGE.value] = template
 
         return response
     
     # Creates the final response message including error or success codes and formatted template
     def create_response_message(self, response, response_message):
-        if ResponseConstansts.ERROR_MESSAGE.value not in response:
+        if ResponseConstant.ERROR_MESSAGE.value not in response:
             error_code = ResponseCodes.SUCCESS
-            response_message[ResponseConstansts.ERROR_CODE.value] = error_code.value
+            response_message[ResponseConstant.ERROR_CODE.value] = error_code.value
         else:
-            response_message[ResponseConstansts.ERROR_CODE.value] = ResponseCodes.INSUFFICIENT_PARAMETERS.value
-            response_message[ResponseConstansts.ERROR_MESSAGE.value] = ResponseCodes.INSUFFICIENT_PARAMETERS.name
+            response_message[ResponseConstant.ERROR_CODE.value] = ResponseCodes.INSUFFICIENT_PARAMETERS.value
+            response_message[ResponseConstant.ERROR_MESSAGE.value] = ResponseCodes.INSUFFICIENT_PARAMETERS.name
 
-        template = response[ResponseConstansts.FORMATTED_MESSAGE.value]
+        template = response[ResponseConstant.FORMATTED_MESSAGE.value]
 
         if isinstance(template, str):
             try:
@@ -71,7 +71,7 @@ class build_message:
         else:
             template_data = template
         
-        response_message[ResponseConstansts.FORMATTED_MESSAGE.value] = template_data
+        response_message[ResponseConstant.FORMATTED_MESSAGE.value] = template_data
 
         return response_message
     
@@ -86,14 +86,14 @@ class build_message:
         response_message = {}
         error_code = ""
 
-        job_name = job_state_info[ResponseConstansts.JOB_NAME.value]
-        state = job_state_info[ResponseConstansts.STATE.value]
+        job_name = job_state_info[ResponseConstant.JOB_NAME.value]
+        state = job_state_info[ResponseConstant.STATE.value]
 
         if self.does_template_exist(job_name, state) == False:
             # Check if the template exists, if not, return an error
             error_code = ResponseCodes.INVALID_TEMPLATE_PATH
-            response_message[ResponseConstansts.ERROR_CODE.value] = error_code.value
-            response_message[ResponseConstansts.ERROR_MESSAGE.value] = error_code.name
+            response_message[ResponseConstant.ERROR_CODE.value] = error_code.value
+            response_message[ResponseConstant.ERROR_MESSAGE.value] = error_code.name
         else:
             # If the template exists, read it and create the message block
             template = self.get_template(job_name, state)

@@ -1,6 +1,6 @@
 from enum import Enum
 
-class ResponseConstansts(Enum):
+class ResponseConstant(Enum):
     ERROR_CODE = 'error_code'
     ERROR_MESSAGE = 'error_message'
     FORMATTED_MESSAGE = 'formatted_message'
