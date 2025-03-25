@@ -31,7 +31,7 @@ def sendCustomSlackMessage():
     channels = data['channels']
 
     try:
-        response_message = SEND_MESSAGE.send_custom_slack_message(formatted_message, channels)
+        response_message = SEND_MESSAGE.send_slack_message(formatted_message, channels)
     
     except Exception as e:
         print (e)
