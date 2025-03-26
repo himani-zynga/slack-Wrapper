@@ -7,3 +7,4 @@ class ResponseCodes(Enum):
     INVALID_TEMPLATE_PATH = 3
     INSUFFICIENT_PARAMETERS = 4
     UNKNOWN_ERROR = 5
+    INVALID_INPUT = 6

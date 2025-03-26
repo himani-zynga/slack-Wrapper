@@ -4,7 +4,7 @@ import json
 import re
 from response_constants import ResponseConstant
 
-class build_message:
+class BuildSlackMessage:
 
     # Creates the path to the template file based on job name and state
     def create_path(self, job_name, state):
@@ -103,4 +103,4 @@ class build_message:
     
     
 
-BUILD_MESSAGE = build_message()
+BUILD_MESSAGE = BuildSlackMessage()

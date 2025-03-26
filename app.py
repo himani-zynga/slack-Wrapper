@@ -1,6 +1,7 @@
 from flask import Flask, Response, jsonify, request, abort
 from send_slack_message import SEND_MESSAGE
 from build_slack_message import BUILD_MESSAGE
+from save_message import SAVE_MESSAGE
 from pathlib import Path
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -54,6 +55,19 @@ def buildFormattedMessage():
     
     return response_message
 
+@app.route('/slack/save_message', methods = ['POST'])
+def saveMessage():
+    data = get_arguments(request)
+    formatted_message = data['formatted_message']
+    message_id = data['message_id']
+
+    try:
+        response_message = SAVE_MESSAGE.save_slack_message(formatted_message, message_id)
+
+    except Exception as e:
+        response_message = f"Error: {e}"
+    
+    return response_message
 
 print("step 2")
 scheduler = BackgroundScheduler()

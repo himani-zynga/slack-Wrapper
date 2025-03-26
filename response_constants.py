@@ -8,3 +8,6 @@ class ResponseConstant(Enum):
     STATE = 'state'
     SUCCESS_MESSAGE = 'success_message'
     FAILURE_MESSAGE = 'failure_message'
+    MESSAGE_ID = "message_id"
+    MESSAGES = "messages"
+    LAST_MODIFIED_TIMESTAMP = "last_modified"

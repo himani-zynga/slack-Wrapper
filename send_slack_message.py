@@ -48,10 +48,10 @@ class SlackMessageSender:
 
     # Creates a message structure for Slack.
     def create_message(self, channel, formatted_message):
-        icon_emoji = ":ash-impressed:" if "fail" not in formatted_message or "FAIL" not in formatted_message else ":ash-not-impressed:"
+        icon_emoji = ":ash-impressed:"
         return {
             'channel': channel,
-            'username': 'Release Mate',
+            'username': 'Edison',
             'icon_emoji': icon_emoji,
             'blocks': formatted_message
         }
