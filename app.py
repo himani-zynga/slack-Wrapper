@@ -2,6 +2,7 @@ from flask import Flask, Response, jsonify, request, abort
 from send_slack_message import SEND_MESSAGE
 from build_slack_message import BUILD_MESSAGE
 from save_message import SAVE_MESSAGE
+from response_constants import ResponseConstant
 from pathlib import Path
 from dotenv import load_dotenv
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,6 +13,7 @@ import os
 import os.path
 import ssl
 import sys
+import json
 
 sys.stderr = open('/dev/null')       # Silence silly warnings from paramiko
 sys.stderr = sys.__stderr__
@@ -25,13 +27,34 @@ def get_arguments(request):
     data = request.get_json()
     return data
 
+def create_path(message_id):
+    message_id = message_id.lower()
+    message_path = "Messages/"+message_id+".json"
+    return message_path
+
+def get_message_from_id(message_id):
+    file_message_path = create_path(message_id)
+    if not os.path.exists(file_message_path):
+        raise FileNotFoundError(f"Message file with ID {message_id} not found.")
+    try:
+        with open(file_message_path, 'r') as data:
+            file = json.load(data)
+            return file[ResponseConstant.MESSAGES.value]
+    
+    except json.JSONDecodeError:
+        raise Exception(f"The file with ID {message_id} contains invalid JSON.")
+    
+    except Exception as e:
+        raise Exception(f"Reading message file with ID {message_id}: {e}")
+
 @app.route('/slack/send_messsage', methods = ['POST'])
 def sendCustomSlackMessage():
     data = get_arguments(request)
-    formatted_message = data['formatted_message']
+    message_id = data['message_id']
     channels = data['channels']
 
     try:
+        formatted_message = get_message_from_id(message_id)
         response_message = SEND_MESSAGE.send_slack_message(formatted_message, channels)
     
     except Exception as e:

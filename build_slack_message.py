@@ -7,7 +7,10 @@ from response_constants import ResponseConstant
 class BuildSlackMessage:
 
     # Creates the path to the template file based on job name and state
+    # lower case for path
     def create_path(self, job_name, state):
+        job_name = job_name.lower()
+        state = state.lower()
         template_path = 'Templates/'+job_name+'/'+state+".txt"
         return template_path
     
@@ -24,7 +27,7 @@ class BuildSlackMessage:
                 template = file.read()
                 return template
         except Exception as e:
-            raise Exception(f"Error : {e}")
+            raise Exception(f"Error : {e}") 
     
     # Replaces placeholders in the template with corresponding values from msg_template_params
     def replace_template_params(self, template, msg_template_params):
@@ -97,6 +100,7 @@ class BuildSlackMessage:
         else:
             # If the template exists, read it and create the message block
             template = self.get_template(job_name, state)
+            # check template is array else throw error
             response_message = self.create_message_block(template, msg_template_params, response_message)
 
         return response_message
